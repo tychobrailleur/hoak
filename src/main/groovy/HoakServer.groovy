@@ -6,8 +6,9 @@ class HoakServer extends GroovyVerticle {
     def void start() {
 
         def eventBus = vertx.eventBus()
-        vertx.deployVerticle('chat_consumer.rb')
+//        vertx.deployVerticle('chat_consumer.rb')
 
+        vertx.deployVerticle('SseConsumer.groovy', [ worker: true ])
         vertx.createHttpServer().requestHandler({ req ->
 
             eventBus.send('news.uk.sport', 'Hello!')

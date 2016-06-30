@@ -17,6 +17,7 @@ dependencies {
   compile "io.vertx:vertx-lang-groovy:${version}"
   compile "io.vertx:vertx-rx:${version}"
   compile "io.vertx:vertx-lang-ruby:${version}"
+  compile "io.reactivex:rxapache-http:0.21.0"
 }
 
 processResources {
