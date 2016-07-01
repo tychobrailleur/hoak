@@ -10,32 +10,35 @@ import rx.apache.http.ObservableHttpResponse
 
 class SseConsumer extends GroovyVerticle {
 
+    def logger = io.vertx.core.logging.LoggerFactory.getLogger(SseConsumer)
+
     @Override
     def void start() {
 
-        // CloseableHttpAsyncClient httpClient = HttpAsyncClients.createDefault();
+        def eventBus = vertx.eventBus()
 
+        final String endpoint = vertx.getOrCreateContext().config()['endpoint']
         final RequestConfig requestConfig = RequestConfig.custom()
                 .setConnectTimeout(500).build()
         final CloseableHttpAsyncClient httpClient = HttpAsyncClients.custom()
                 .setDefaultRequestConfig(requestConfig)
-                .setDefaultHeaders([ new BasicHeader('Accept', 'text/event-stream') ])
+                .setDefaultHeaders([new BasicHeader('Accept', 'text/event-stream')])
                 .setMaxConnPerRoute(20)
                 .setMaxConnTotal(50)
                 .build()
 
         httpClient.start()
 
-        ObservableHttp.createRequest(HttpAsyncMethods.createGet("http://localhost:8000/events"), httpClient)
+        ObservableHttp.createRequest(HttpAsyncMethods.createGet(endpoint), httpClient)
                 .toObservable()
                 .flatMap({ ObservableHttpResponse response ->
             return response.getContent().map({ byte[] bb ->
                 return new String(bb)
             })
-        }).toBlocking().forEach({ String resp ->
-            // this will be invoked for each event
-            println(resp)
-        });
+        }).forEach({ String resp ->
+            logger.debug("Received message: ${resp}")
+            eventBus.send('hoak.message.process', resp)
+        })
 
     }
 }
